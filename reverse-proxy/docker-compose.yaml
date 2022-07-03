@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+
+  app:
+    container_name: app
+    build:
+      context: .
+    networks:
+      - proxy-network
+    depends_on:
+      - db
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 15s node index.js
+
+  proxy:
+    container_name: proxy
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    networks:
+      - proxy-network
+    depends_on:
+      - app
+    ports:
+      - "8080:80"
+
+  db:
+    container_name: db
+    image: mysql:5.7
+    networks:
+      - proxy-network
+    environment:
+      - MYSQL_USER=example
+      - MYSQL_PASSWORD=example
+      - MYSQL_DATABASE=example
+      - MYSQL_ROOT_PASSWORD=example
+
+networks:
+  proxy-network:
+    driver: bridge
